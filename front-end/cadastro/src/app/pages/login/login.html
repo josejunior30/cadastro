@@ -1,34 +1,40 @@
-<div>
-  <div>
-    <h1>Login</h1>
-    <p>Acesse sua conta para continuar</p>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="mb-8 text-center">
+      <h1 class="auth-title">Login</h1>
+      <p class="auth-subtitle">Acesse sua conta para continuar</p>
+    </div>
 
-    <form (ngSubmit)="entrar()">
-      <div>
-        <label>Email</label>
+    <form (ngSubmit)="entrar()" class="space-y-5">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+
         <input
           type="email"
           name="email"
           [(ngModel)]="email"
           placeholder="Digite seu email"
+          class="form-input"
         />
       </div>
 
-      <div>
-        <label>Senha</label>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+
         <input
           type="password"
           name="senha"
           [(ngModel)]="senha"
           placeholder="Digite sua senha"
+          class="form-input"
         />
       </div>
 
-      <div *ngIf="erro">
+      <div *ngIf="erro" class="alert-error">
         {{ erro }}
       </div>
 
-      <button type="submit" [disabled]="carregando">
+      <button type="submit" [disabled]="carregando" class="btn-primary">
         {{ carregando ? 'Entrando...' : 'Entrar' }}
       </button>
     </form>
