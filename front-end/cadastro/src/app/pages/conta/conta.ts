@@ -1,9 +1,11 @@
+
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { catchError, map, of, shareReplay, startWith } from 'rxjs';
+
 import { ContaService } from '../../services/conta.service';
 import { PluggyAccountDTO } from '../../models/conta';
-import { map, startWith, catchError, of, shareReplay } from 'rxjs';
-import { RouterModule } from '@angular/router';
 
 type ContaVm = {
   loading: boolean;
@@ -43,4 +45,21 @@ export class Conta {
     }),
     shareReplay({ bufferSize: 1, refCount: true })
   );
+
+  formatSubtype(subtype: string | null | undefined): string {
+    if (!subtype) {
+      return 'Não informado';
+    }
+
+    const normalizedSubtype = subtype.trim().toUpperCase();
+
+    switch (normalizedSubtype) {
+      case 'CHECKING_ACCOUNT':
+        return 'Conta corrente';
+      case 'CREDIT_CARD':
+        return 'Cartão de Crédito';
+      default:
+        return subtype;
+    }
+  }
 }

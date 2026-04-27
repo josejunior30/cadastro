@@ -1,16 +1,103 @@
-.conta-container {
-  padding: 16px;
+@import 'tailwindcss';
+:host {
+  display: block;
 }
 
-.account-list {
-  display: grid;
-  gap: 12px;
+.account-grid {
+  @apply grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3;
+}
+
+.account-card-link {
+  @apply block rounded-3xl outline-none transition duration-200 hover:-translate-y-1 hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-offset-2;
+}
+
+.account-card-link:focus-visible {
+  --tw-ring-color: rgb(237 121 71 / 0.35);
 }
 
 .account-card {
-  padding: 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
+  @apply relative overflow-hidden rounded-3xl border border-white/10 p-6 text-white shadow-xl;
+  background-image: linear-gradient(135deg, #0f172a, #1e293b, #334155);
 }
 
+.account-card--credit {
+  @apply border-violet-200/20;
+  background-image: linear-gradient(135deg, #09090b, #4c1d95, #701a75);
+}
+
+.account-card-glow {
+  @apply pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full blur-3xl opacity-30;
+  background-color: #ed7947;
+}
+
+.account-card-glow--credit {
+  background-color: #a855f7;
+}
+
+.account-card-watermark {
+  @apply pointer-events-none absolute bottom-4 right-5 text-6xl font-black text-white/10;
+  letter-spacing: 0.18em;
+}
+
+.account-card-content {
+  @apply relative z-10 flex h-full flex-col justify-between gap-6;
+}
+
+.account-card-top {
+  @apply flex items-start justify-between gap-4;
+}
+
+.account-card-label {
+  @apply text-xs font-semibold uppercase text-white/60;
+  letter-spacing: 0.24em;
+}
+
+.account-card-title {
+  @apply mt-2 truncate text-xl font-bold;
+}
+
+.account-card-badge {
+  @apply shrink-0 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase text-white/90 backdrop-blur;
+  letter-spacing: 0.08em;
+}
+
+.account-card-badge--credit {
+  @apply border-violet-200/20 bg-violet-400/15 text-violet-100;
+}
+
+.account-card-value-label {
+  @apply text-xs uppercase text-white/55;
+  letter-spacing: 0.22em;
+}
+
+.account-card-value {
+  @apply mt-1 text-3xl font-bold tracking-tight;
+}
+
+.account-card-meta-grid {
+  @apply grid grid-cols-2 gap-3 text-sm;
+}
+
+.account-card-meta-box {
+  @apply rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm;
+}
+
+.account-card-meta-label {
+  @apply text-[11px] uppercase text-white/50;
+  letter-spacing: 0.18em;
+}
+
+.account-card-meta-value {
+  @apply mt-1 truncate font-medium text-white/95;
+}
+
+.account-card-footer {
+  @apply border-t border-white/10 pt-4;
+}
+
+.account-card-footer-value {
+  @apply mt-1 truncate text-sm font-medium text-white/90;
+}
+ .page-counter {
+    @apply rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm backdrop-blur;
+  }
