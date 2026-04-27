@@ -1,0 +1,28 @@
+<section class="conta-container">
+  <h2>Todas as contas</h2>
+
+  @if (vm$ | async; as vm) {
+    @if (vm.loading) {
+      <p>Carregando...</p>
+    } @else if (vm.errorMessage) {
+      <p class="error">{{ vm.errorMessage }}</p>
+    } @else if (vm.accounts.length === 0) {
+      <p>Nenhuma conta encontrada.</p>
+    } @else {
+      <p><strong>Total:</strong> {{ vm.accounts.length }}</p>
+
+      <div class="account-list">
+        @for (account of vm.accounts; track account.id) {
+          <article class="account-card">
+            <p><strong>Nome:</strong> {{ account.name }}</p>
+            <p><strong>Tipo:</strong> {{ account.type }}</p>
+            <p><strong>Subtipo:</strong> {{ account.subtype || 'Não informado' }}</p>
+            <p><strong>Saldo:</strong> {{ account.balance | currency: account.currencyCode }}</p>
+            <p><strong>Moeda:</strong> {{ account.currencyCode }}</p>
+            <p><strong>Atualizado:</strong> {{ account.updatedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+          </article>
+        }
+      </div>
+    }
+  }
+</section>

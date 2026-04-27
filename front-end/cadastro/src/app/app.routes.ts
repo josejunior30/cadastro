@@ -12,5 +12,9 @@ export const routes: Routes = [
      canActivate: [authGuard],
     loadComponent: () => import('./pages/pluggy-connect/pluggy-connect').then((m) => m.PluggyConnectComponent),
   },
-
+   {
+    path: 'conta',
+     canActivate: [authGuard],
+    loadComponent: () => import('./pages/conta/conta').then((m) => m.Conta),
+  },
 ];
