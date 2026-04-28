@@ -1,0 +1,36 @@
+<div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <p class="text-sm text-gray-600">
+    Página
+    <strong class="font-semibold text-gray-900">
+      {{ currentPage }}
+    </strong>
+    de
+    <strong class="font-semibold text-gray-900">
+      {{ totalPages }}
+    </strong>
+
+    <span class="text-gray-400">
+      · {{ totalElements }} registros
+    </span>
+  </p>
+
+  <div class="flex items-center gap-3">
+    <button
+      type="button"
+      class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+      [disabled]="!hasPrevious || disabled"
+      (click)="previousPage()"
+    >
+      Anterior
+    </button>
+
+    <button
+      type="button"
+      class="rounded-lg bg-[#03385c] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+      [disabled]="!hasNext || disabled"
+      (click)="nextPage()"
+    >
+      Próxima
+    </button>
+  </div>
+</div>

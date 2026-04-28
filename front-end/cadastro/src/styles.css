@@ -3,7 +3,8 @@
 
 :root {
   --color-primary: #ed7947;
-  --color-app-bg: #8b979e96;
+  --color-app-bg: #bbbec073;
+  --color-secundary: #03385c;
 }
 
 @layer components {
@@ -66,4 +67,42 @@
     @apply text-sm text-gray-600;
   }
 
- 
+
+
+  .table-wrapper {
+    @apply overflow-x-auto rounded-xl border border-gray-200 bg-white;
+  }
+
+  .transacoes-table {
+    @apply min-w-full divide-y divide-gray-200 text-left text-sm;
+  }
+
+  .transacoes-table thead {
+
+    background-color: var(--color-secundary);
+
+  }
+
+ .transacoes-table th {
+    @apply whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-white transition;
+  }
+  .transacoes-table tbody tr:nth-child(odd) {
+  @apply bg-white;
+}
+.transacoes-table tbody tr:nth-child(even) {
+      background-color: var(--color-app-bg);
+}
+  .transacoes-table tbody {
+    @apply divide-y divide-gray-100 bg-white;
+  }
+
+  .transacoes-table td {
+    @apply whitespace-nowrap px-4 py-4 text-gray-700;
+  }
+
+  .transacoes-table tbody tr {
+    @apply transition hover:bg-gray-500 text-white;
+  }
+.transacoes-table tbody tr:hover td {
+  @apply text-white;
+}
