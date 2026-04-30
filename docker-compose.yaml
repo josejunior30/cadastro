@@ -1,0 +1,31 @@
+services:
+  backend:
+    container_name: cadastro-backend
+    build:
+      context: ./backend/cadastro
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      APP_PROFILE: test
+      SPRING_PROFILES_ACTIVE: test
+
+      PLUGGY_BASE_URL: ${PLUGGY_BASE_URL:-https://api.pluggy.ai}
+      PLUGGY_CLIENT_ID: ${PLUGGY_CLIENT_ID}
+      PLUGGY_CLIENT_SECRET: ${PLUGGY_CLIENT_SECRET}
+      PLUGGY_OAUTH_REDIRECT_URL: http://localhost:4200/pluggy/callback
+      PLUGGY_INCLUDE_SANDBOX: "true"
+
+  frontend:
+    container_name: cadastro-frontend
+    build:
+      context: ./front-end/cadastro
+      dockerfile: Dockerfile
+      args:
+        API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"

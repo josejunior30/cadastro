@@ -2,4 +2,6 @@
 <section name="Workbench">
 	<section name="WorkbenchPreferenceDialog.dialogBounds">
 	</section>
+	<section name="EditorSelectionDialog">
+	</section>
 </section>
