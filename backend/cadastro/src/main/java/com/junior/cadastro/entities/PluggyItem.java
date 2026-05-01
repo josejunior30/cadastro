@@ -3,8 +3,12 @@ package com.junior.cadastro.entities;
 import java.time.Instant;
 import java.util.Objects;
 
+import com.junior.cadastro.entities.enuns.PluggySyncStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,12 +29,15 @@ public class PluggyItem {
     private String pluggyItemId;
 
     private Instant createdAt;
-    @Column(length = 30)
-    private String syncStatus;
+
 
     @Column(length = 1000)
     private String lastSyncError;
-
+    
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private PluggySyncStatus syncStatus;
+    
     private Instant lastSyncAt;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -46,18 +53,21 @@ public class PluggyItem {
         this.user = user;
         this.createdAt = Instant.now();
     }
-	public PluggyItem(Long id, String pluggyItemId, Instant createdAt, String syncStatus, String lastSyncError,
-			Instant lastSyncAt, User user) {
+
+
+
+
+	public PluggyItem(Long id, String pluggyItemId, Instant createdAt, String lastSyncError,
+			PluggySyncStatus syncStatus, Instant lastSyncAt, User user) {
 		super();
 		this.id = id;
 		this.pluggyItemId = pluggyItemId;
 		this.createdAt = createdAt;
-		this.syncStatus = syncStatus;
 		this.lastSyncError = lastSyncError;
+		this.syncStatus = syncStatus;
 		this.lastSyncAt = lastSyncAt;
 		this.user = user;
 	}
-
 
 
 
@@ -85,14 +95,18 @@ public class PluggyItem {
         this.user = user;
     }
 
-	public String getSyncStatus() {
+
+
+	public PluggySyncStatus getSyncStatus() {
 		return syncStatus;
 	}
 
 
-	public void setSyncStatus(String syncStatus) {
+
+	public void setSyncStatus(PluggySyncStatus syncStatus) {
 		this.syncStatus = syncStatus;
 	}
+
 
 
 	public String getLastSyncError() {

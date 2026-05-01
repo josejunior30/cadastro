@@ -42,26 +42,30 @@ public class PluggyWebhookService {
             }
 
             switch (event.event()) {
-                case "item/created", "item/updated", "transactions/created", "transactions/updated" -> {
-                    pluggyService.syncItemFromWebhook(event.itemId(), event.clientUserId());
-                }
-
-                case "item/error" -> {
-                    pluggyService.markItemAsErrorFromWebhook(event.itemId(), event.error());
-                }
-
-                case "item/deleted" -> {
-                    pluggyService.markItemAsDeletedFromWebhook(event.itemId());
-                }
-
-                case "item/waiting_user_input", "item/login_succeeded" -> {
-                    log.info("Evento Pluggy informativo recebido: {} itemId={}", event.event(), event.itemId());
-                }
-
-                default -> {
-                    log.info("Evento Pluggy ignorado: {}", event.event());
-                }
+            case "item/created", "item/updated" -> {
+                pluggyService.syncItemFromWebhook(event.itemId(), event.clientUserId());
             }
+
+            case "transactions/created", "transactions/updated" -> {
+                pluggyService.syncItemFromWebhookByItemId(event.itemId());
+            }
+
+            case "item/error" -> {
+                pluggyService.markItemAsErrorFromWebhook(event.itemId(), event.error());
+            }
+
+            case "item/deleted" -> {
+                pluggyService.markItemAsDeletedFromWebhook(event.itemId());
+            }
+
+            case "item/waiting_user_input", "item/login_succeeded" -> {
+                log.info("Evento Pluggy informativo recebido: {} itemId={}", event.event(), event.itemId());
+            }
+
+            default -> {
+                log.info("Evento Pluggy ignorado: {}", event.event());
+            }
+        }
 
         } catch (PluggyIntegrationException e) {
             log.error("Erro de integração ao processar webhook Pluggy: {}", e.getMessage(), e);

@@ -8,57 +8,50 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.junior.cadastro.DTO.ConnectTokenResponse;
 import com.junior.cadastro.DTO.PluggyAccountDTO;
 import com.junior.cadastro.DTO.PluggyTransactionDTO;
-import com.junior.cadastro.entities.PluggyAccount;
 import com.junior.cadastro.entities.PluggyItem;
-import com.junior.cadastro.entities.PluggyTransaction;
 import com.junior.cadastro.entities.User;
+import com.junior.cadastro.entities.enuns.PluggySyncStatus;
 import com.junior.cadastro.exceptions.PluggyIntegrationException;
 import com.junior.cadastro.repository.PluggyAccountRepository;
 import com.junior.cadastro.repository.PluggyItemRepository;
 import com.junior.cadastro.repository.PluggyTransactionRepository;
-import com.junior.cadastro.repository.UserRepository;
-
 
 @Service
 public class PluggyService {
 
     private static final Logger log = LoggerFactory.getLogger(PluggyService.class);
 
-    private final PluggyMapper pluggyMapper;
     private final PluggyClientService pluggyClientService;
-    private final UserRepository userRepository;
-    private final PluggyItemRepository itemRepository;
+    private final CurrentUserService currentUserService;
+    private final PluggySyncService pluggySyncService;
     private final PluggyAccountRepository accountRepository;
+    private final PluggyItemRepository itemRepository;
     private final PluggyTransactionRepository transactionRepository;
 
     public PluggyService(
             PluggyClientService pluggyClientService,
-            PluggyMapper pluggyMapper,
-            UserRepository userRepository,
-            PluggyItemRepository itemRepository,
+            CurrentUserService currentUserService,
+            PluggySyncService pluggySyncService,
             PluggyAccountRepository accountRepository,
+            PluggyItemRepository itemRepository,
             PluggyTransactionRepository transactionRepository
     ) {
         this.pluggyClientService = pluggyClientService;
-        this.pluggyMapper = pluggyMapper;
-        this.userRepository = userRepository;
-        this.itemRepository = itemRepository;
+        this.currentUserService = currentUserService;
+        this.pluggySyncService = pluggySyncService;
         this.accountRepository = accountRepository;
+        this.itemRepository = itemRepository;
         this.transactionRepository = transactionRepository;
     }
 
     public ConnectTokenResponse createConnectToken() {
-        User user = getAuthenticatedUser();
+        User user = currentUserService.getAuthenticatedUser();
 
         String accessToken = pluggyClientService.createConnectToken(
                 String.valueOf(user.getId())
@@ -69,37 +62,39 @@ public class PluggyService {
 
     @Transactional
     public void syncItem(String itemId) {
-        User user = getAuthenticatedUser();
-        syncItemForUser(user, itemId);
+        User user = currentUserService.getAuthenticatedUser();
+        pluggySyncService.syncItemForUser(user, itemId);
     }
 
     @Transactional
     public void syncItemFromWebhook(String itemId, String clientUserId) {
-        if (itemId == null || itemId.isBlank()) {
-            throw new PluggyIntegrationException("Webhook Pluggy sem itemId.");
+        User user = currentUserService.getUserByClientUserId(clientUserId);
+        pluggySyncService.syncItemForUser(user, itemId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PluggyAccountDTO> findMyAccounts() {
+        User user = currentUserService.getAuthenticatedUser();
+
+        return accountRepository.findByUserOrderByNameAsc(user)
+                .stream()
+                .map(PluggyAccountDTO::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PluggyTransactionDTO> findMyTransactionsByAccount(Long accountId, Pageable pageable) {
+        User user = currentUserService.getAuthenticatedUser();
+
+        boolean accountBelongsToUser = accountRepository.findByIdAndUser(accountId, user).isPresent();
+
+        if (!accountBelongsToUser) {
+            throw new PluggyIntegrationException("Conta não encontrada para o usuário autenticado.");
         }
 
-        if (clientUserId == null || clientUserId.isBlank()) {
-            throw new PluggyIntegrationException("Webhook Pluggy sem clientUserId.");
-        }
-
-        Long userId;
-
-        try {
-            userId = Long.valueOf(clientUserId);
-        } catch (NumberFormatException e) {
-            throw new PluggyIntegrationException(
-                    "clientUserId inválido recebido da Pluggy: " + clientUserId,
-                    e
-            );
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new PluggyIntegrationException(
-                        "Usuário não encontrado para clientUserId=" + clientUserId
-                ));
-
-        syncItemForUser(user, itemId);
+        return transactionRepository
+                .findByUserAndAccountIdOrderByDateDesc(user, accountId, pageable)
+                .map(PluggyTransactionDTO::new);
     }
 
     @Transactional
@@ -112,7 +107,7 @@ public class PluggyService {
         PluggyItem item = itemRepository.findByPluggyItemId(itemId)
                 .orElseGet(() -> new PluggyItem(itemId, null));
 
-        item.setSyncStatus("ERROR");
+        item.setSyncStatus(PluggySyncStatus.DELETED);
         item.setLastSyncError(formatWebhookError(error));
         item.setLastSyncAt(Instant.now());
 
@@ -128,148 +123,15 @@ public class PluggyService {
             return;
         }
 
-        itemRepository.findByPluggyItemId(itemId).ifPresent(item -> {
-            item.setSyncStatus("DELETED");
+        itemRepository.findByPluggyItemId(itemId).ifPresentOrElse(item -> {
+        	item.setSyncStatus(PluggySyncStatus.ERROR);
             item.setLastSyncAt(Instant.now());
             itemRepository.save(item);
+
+            log.info("Item Pluggy marcado como DELETED via webhook. itemId={}", itemId);
+        }, () -> {
+            log.warn("Item Pluggy não encontrado para marcar como DELETED. itemId={}", itemId);
         });
-
-        log.info("Item Pluggy marcado como DELETED via webhook. itemId={}", itemId);
-    }
-
-    private void syncItemForUser(User user, String itemId) {
-        log.info("Sincronizando item Pluggy. userId={} itemId={}", user.getId(), itemId);
-
-        PluggyItem item = itemRepository.findByPluggyItemId(itemId)
-                .orElseGet(() -> new PluggyItem(itemId, user));
-
-        item.setUser(user);
-        item.setSyncStatus("SYNCING");
-        item.setLastSyncError(null);
-        itemRepository.save(item);
-
-        try {
-            JsonNode accountsResponse = pluggyClientService.fetchAccounts(itemId);
-            JsonNode accounts = accountsResponse != null ? accountsResponse.get("results") : null;
-
-            if (accounts == null || !accounts.isArray()) {
-                item.setSyncStatus("SUCCESS");
-                item.setLastSyncAt(Instant.now());
-                itemRepository.save(item);
-
-                log.warn("Nenhuma conta retornada pela Pluggy. itemId={}", itemId);
-                return;
-            }
-
-            int totalAccounts = 0;
-            int totalTransactions = 0;
-
-            for (JsonNode accountNode : accounts) {
-                PluggyAccount account = saveAccount(user, item, accountNode);
-
-                totalAccounts++;
-                totalTransactions += syncTransactions(user, account);
-            }
-
-            item.setSyncStatus("SUCCESS");
-            item.setLastSyncError(null);
-            item.setLastSyncAt(Instant.now());
-            itemRepository.save(item);
-
-            log.info(
-                    "Item Pluggy sincronizado. itemId={} accounts={} transactions={}",
-                    itemId,
-                    totalAccounts,
-                    totalTransactions
-            );
-
-        } catch (Exception e) {
-            item.setSyncStatus("ERROR");
-            item.setLastSyncError(e.getMessage());
-            item.setLastSyncAt(Instant.now());
-            itemRepository.save(item);
-
-            throw e;
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public List<PluggyAccountDTO> findMyAccounts() {
-        User user = getAuthenticatedUser();
-
-        return accountRepository.findByUserOrderByNameAsc(user)
-                .stream()
-                .map(PluggyAccountDTO::new)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public Page<PluggyTransactionDTO> findMyTransactionsByAccount(Long accountId, Pageable pageable) {
-        User user = getAuthenticatedUser();
-
-        boolean accountBelongsToUser = accountRepository.findByIdAndUser(accountId, user).isPresent();
-
-        if (!accountBelongsToUser) {
-            throw new PluggyIntegrationException("Conta não encontrada para o usuário autenticado.");
-        }
-
-        return transactionRepository
-                .findByUserAndAccountIdOrderByDateDesc(user, accountId, pageable)
-                .map(PluggyTransactionDTO::new);
-    }
-
-    private PluggyAccount saveAccount(User user, PluggyItem item, JsonNode accountNode) {
-        String pluggyAccountId = accountNode.path("id").asText(null);
-
-        PluggyAccount account = accountRepository.findByPluggyAccountId(pluggyAccountId)
-                .orElseGet(PluggyAccount::new);
-
-        account = pluggyMapper.toAccount(accountNode, account, item, user);
-
-        return accountRepository.save(account);
-    }
-
-    private int syncTransactions(User user, PluggyAccount account) {
-        int page = 1;
-        int totalImported = 0;
-
-        while (true) {
-            JsonNode response = pluggyClientService.fetchTransactions(
-                    account.getPluggyAccountId(),
-                    page
-            );
-
-            JsonNode results = response != null ? response.get("results") : null;
-
-            if (results == null || !results.isArray() || results.size() == 0) {
-                break;
-            }
-
-            for (JsonNode transactionNode : results) {
-                saveTransaction(user, account, transactionNode);
-                totalImported++;
-            }
-
-            if (results.size() < 500) {
-                break;
-            }
-
-            page++;
-        }
-
-        return totalImported;
-    }
-
-    private void saveTransaction(User user, PluggyAccount account, JsonNode transactionNode) {
-        String pluggyTransactionId = transactionNode.path("id").asText(null);
-
-        PluggyTransaction transaction = transactionRepository
-                .findByPluggyTransactionId(pluggyTransactionId)
-                .orElseGet(PluggyTransaction::new);
-
-        transaction = pluggyMapper.toTransaction(transactionNode, transaction, account, user);
-
-        transactionRepository.save(transaction);
     }
 
     private String formatWebhookError(Map<String, Object> error) {
@@ -277,8 +139,13 @@ public class PluggyService {
             return "Erro recebido via webhook Pluggy.";
         }
 
-        String message = String.valueOf(error.getOrDefault("message", "Erro recebido via webhook Pluggy."));
-        String code = String.valueOf(error.getOrDefault("code", ""));
+        String message = String.valueOf(
+                error.getOrDefault("message", "Erro recebido via webhook Pluggy.")
+        );
+
+        String code = String.valueOf(
+                error.getOrDefault("code", "")
+        );
 
         if (code.isBlank() || "null".equalsIgnoreCase(code)) {
             return message;
@@ -286,31 +153,25 @@ public class PluggyService {
 
         return code + " - " + message;
     }
-
-    private User getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null) {
-            throw new PluggyIntegrationException("Nenhum usuário autenticado encontrado.");
+    
+    @Transactional
+    public void syncItemFromWebhookByItemId(String itemId) {
+        if (itemId == null || itemId.isBlank()) {
+            throw new PluggyIntegrationException("Webhook Pluggy sem itemId.");
         }
 
-        String email;
-
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            email = jwt.getClaimAsString("email");
-        } else {
-            email = authentication.getName();
-        }
-
-        if (email == null || email.isBlank()) {
-            email = authentication.getName();
-        }
-
-        final String resolvedEmail = email;
-
-        return userRepository.findByEmail(resolvedEmail)
+        User user = itemRepository.findByPluggyItemId(itemId)
+                .map(item -> item.getUser())
                 .orElseThrow(() -> new PluggyIntegrationException(
-                        "Usuário autenticado não encontrado: " + resolvedEmail
+                        "Item Pluggy não encontrado para sincronização por itemId=" + itemId
                 ));
+
+        if (user == null) {
+            throw new PluggyIntegrationException(
+                    "Item Pluggy sem usuário vinculado. itemId=" + itemId
+            );
+        }
+
+        pluggySyncService.syncItemForUser(user, itemId);
     }
 }
