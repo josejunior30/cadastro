@@ -60,7 +60,13 @@ public class SecurityFilterConfig {
 				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.cors(Customizer.withDefaults())
 				.authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-						.requestMatchers("/auth/login", "/h2-console/**").permitAll()
+						   .requestMatchers(
+				                    "/auth/login",
+				                    "/h2-console/**",
+				                    "/swagger-ui.html",
+				                    "/swagger-ui/**",
+				                    "/v3/api-docs/**"
+				                ).permitAll()
 						.requestMatchers(HttpMethod.POST, "/user").permitAll()
 						.requestMatchers("/user/**").hasRole("ADMIN")
 						

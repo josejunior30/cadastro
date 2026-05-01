@@ -1,7 +1,10 @@
 package com.junior.cadastro.DTO;
 
-public class ConnectTokenResponse {
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Resposta com o token de conexão da Pluggy")
+public class ConnectTokenResponse {
+	@Schema(example = "pluggy-connect-token")
     private String accessToken;
 
     public ConnectTokenResponse() {

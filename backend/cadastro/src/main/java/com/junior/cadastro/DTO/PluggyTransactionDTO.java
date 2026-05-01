@@ -7,20 +7,44 @@ import java.time.LocalDate;
 
 import com.junior.cadastro.entities.PluggyTransaction;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+@Schema(description = "Transação sincronizada da Pluggy")
 public class PluggyTransactionDTO {
 
+    @Schema(example = "1")
     private Long id;
+
+    @Schema(example = "trx-123")
     private String pluggyTransactionId;
+
+    @Schema(example = "2026-04-30")
     private LocalDate date;
+
+    @Schema(example = "Supermercado")
     private String description;
+
+    @Schema(example = "89.90")
     private BigDecimal amount;
+
+    @Schema(example = "BRL")
     private String currencyCode;
+
+    @Schema(example = "FOOD")
     private String category;
+
+    @Schema(example = "POSTED")
     private String status;
+
+    @Schema(example = "DEBIT")
     private String type;
+
+    @Schema(example = "2026-04-30T10:15:00Z")
     private Instant importedAt;
 
+    @Schema(example = "1")
     private Long accountId;
+
+    @Schema(example = "Conta Corrente")
     private String accountName;
 
     public PluggyTransactionDTO() {

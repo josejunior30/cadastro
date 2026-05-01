@@ -29,7 +29,7 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new UserController();
+        controller = new UserController(service);
         service = mock(UserService.class);
         ReflectionTestUtils.setField(controller, "service", service);
     }

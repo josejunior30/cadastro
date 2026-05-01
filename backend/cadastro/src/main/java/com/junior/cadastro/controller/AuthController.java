@@ -2,9 +2,9 @@ package com.junior.cadastro.controller;
 
 
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,17 +16,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import com.junior.cadastro.DTO.LoginRequest;
 import com.junior.cadastro.security.JwtService;
 import com.junior.cadastro.util.HttpRequestUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Autenticação", description = "Endpoints de login e emissão de JWT")
 public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final AuthenticationManager authenticationManager;
@@ -38,6 +43,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(
+        summary = "Realiza login",
+        description = "Autentica o usuário e retorna um token JWT."
+    )
+    @ApiResponse(
+        responseCode = "200",
+        description = "Login realizado com sucesso",
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(value = "{\"token\":\"jwt-token\"}")
+        )
+    )
+    @ApiResponse(responseCode = "401", description = "Credenciais inválidas", content = @Content)
     public ResponseEntity<Object> login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
         final String ip = HttpRequestUtils.clientIp(http);
 
