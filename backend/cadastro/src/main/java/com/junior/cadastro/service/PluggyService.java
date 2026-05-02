@@ -107,7 +107,7 @@ public class PluggyService {
         PluggyItem item = itemRepository.findByPluggyItemId(itemId)
                 .orElseGet(() -> new PluggyItem(itemId, null));
 
-        item.setSyncStatus(PluggySyncStatus.DELETED);
+        item.setSyncStatus(PluggySyncStatus.ERROR);
         item.setLastSyncError(formatWebhookError(error));
         item.setLastSyncAt(Instant.now());
 
@@ -124,7 +124,7 @@ public class PluggyService {
         }
 
         itemRepository.findByPluggyItemId(itemId).ifPresentOrElse(item -> {
-        	item.setSyncStatus(PluggySyncStatus.ERROR);
+        	item.setSyncStatus(PluggySyncStatus.DELETED);
             item.setLastSyncAt(Instant.now());
             itemRepository.save(item);
 

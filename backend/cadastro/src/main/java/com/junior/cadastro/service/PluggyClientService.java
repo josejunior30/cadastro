@@ -60,7 +60,7 @@ public class PluggyClientService {
             Map<String, Object> body = Map.of("options", options);
 
             log.info("Criando connect token da Pluggy para clientUserId={}", clientUserId);
-            log.info("Body enviado para Pluggy connect_token: {}", body);
+            
             JsonNode response = restClient.post()
                     .uri("/connect_token")
                     .header("X-API-KEY", apiKey)
