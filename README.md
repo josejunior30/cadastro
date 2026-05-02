@@ -1,4 +1,4 @@
-# Cadastro
+# Cadastro - Pluggy
 
 Aplicação full stack para cadastro de usuários, autenticação com JWT e integração com a Pluggy para conexão bancária, sincronização de contas e consulta de transações financeiras.
 
@@ -39,7 +39,12 @@ Este projeto demonstra competências práticas em desenvolvimento full stack, in
 - Logs para acompanhamento de autenticação e sincronização.
 - Cache temporário da API key da Pluggy.
 - Retry e circuit breaker para chamadas externas.
--  Testes automatizados para validação da aplicação
+- Testes automatizados para validação da aplicação
+- Observabilidade com Spring Boot Actuator.
+- Health checks da aplicação.
+- Exposição de métricas com Micrometer.
+- Endpoint de métricas para acompanhamento de requisições, JVM, memória, threads e status da aplicação.
+- Documentação dos endpoints de observabilidade no Swagger/OpenAPI.
 
 ### Frontend
 
@@ -74,6 +79,9 @@ Este projeto demonstra competências práticas em desenvolvimento full stack, in
 - JUnit 5
 - Mockito
 - Docker
+- Spring Boot Actuator
+- Micrometer
+- Springdoc OpenAPI
 
 ### Frontend
 
@@ -160,6 +168,13 @@ GET /pluggy/accounts/{accountId}/transactions
 
 Endpoints para integração com a Pluggy, conexão bancária, sincronização de contas e consulta de transações.
 
+### Observabilidade e métricas
+
+```http
+GET /actuator/health
+GET /actuator/info
+GET /actuator/metrics
+GET /actuator/metrics/{requiredMetricName}
 ---
 
 ## Como executar o projeto
@@ -245,6 +260,24 @@ pluggy.client-id=${PLUGGY_CLIENT_ID}
 pluggy.client-secret=${PLUGGY_CLIENT_SECRET}
 ```
 
+## 4. Em `Variáveis de ambiente`, acrescente configuração de Actuator
+
+Depois do exemplo da Pluggy, adicione:
+
+```md
+Também são utilizadas configurações para exposição de observabilidade e métricas:
+
+```properties
+springdoc.show-actuator=true
+
+management.endpoints.web.exposure.include=health,info,metrics
+management.endpoint.health.show-details=always
+management.endpoint.health.show-components=always
+
+management.info.env.enabled=true
+info.app.name=Cadastro API
+info.app.description=API de cadastro com autenticação JWT e integração Pluggy
+info.app.version=1.0.0
 ---
 
 ## Diferenciais técnicos
@@ -265,6 +298,13 @@ Este projeto vai além de um CRUD simples. Ele inclui recursos importantes para 
 - Estrutura preparada para crescimento do domínio
 - Estrutura preparada para crescimento do domínio.
 
+## 5. Em `Diferenciais técnicos`, acrescente
+
+```md
+- Observabilidade com Spring Boot Actuator.
+- Métricas expostas via Micrometer.
+- Health checks para acompanhamento do status da aplicação.
+- Endpoints Actuator documentados no Swagger/OpenAPI.
 ---
 
 ## Melhorias planejadas
@@ -279,18 +319,13 @@ Este projeto vai além de um CRUD simples. Ele inclui recursos importantes para 
 - [ ] Publicar imagens Docker em registry.
 
 ### Backend
-
-- [ ] Implementar webhooks da Pluggy para receber eventos automaticamente.
 - [ ] Criar endpoint seguro para processamento de webhook.
 - [ ] Validar assinatura ou origem dos webhooks.
-- [ ] Melhorar tratamento global de exceções com `@ControllerAdvice`.
 - [ ] Adicionar documentação da API com Swagger/OpenAPI.
 - [ ] Melhorar regras de autorização por perfil de usuário.
 - [ ] Adicionar refresh token.
 - [ ] Persistir histórico de sincronizações.
 - [ ] Criar auditoria de ações sensíveis.
-- [ ] Melhorar observabilidade com métricas e health checks.
-- [ ] Adicionar logs estruturados.
 
 ### Frontend
 
@@ -341,15 +376,16 @@ Este projeto vai além de um CRUD simples. Ele inclui recursos importantes para 
 
 - Webhooks da Pluggy.
 - Docker e Docker Compose.
-- PostgreSQL.
 - Swagger/OpenAPI.
 - Testes automatizados.
+- observalidade .
 
 ### Versão 1.2
 
 - Dashboard financeiro.
 - Filtros avançados.
-- Observabilidade.
+- Evolução da observabilidade dashboards e alertas.
+- PostgreSQL.
 - CI/CD.
 - Deploy em ambiente cloud.
 
@@ -360,12 +396,23 @@ Este projeto vai além de um CRUD simples. Ele inclui recursos importantes para 
 Durante o desenvolvimento deste projeto, foram aplicados conceitos importantes de engenharia de software:
 
 - Modelagem de entidades relacionais.
-- Autenticação e autorização.
-- Integração com serviços externos.
-- Tratamento de falhas em chamadas HTTP.
-- Separação de responsabilidades.
-- Consumo de API REST no frontend.
-- Proteção de rotas.
+- Autenticação e autorização com JWT.
+- Proteção de endpoints com Spring Security.
+- Integração com serviços externos usando REST Client.
+- Tratamento global de exceções com respostas padronizadas.
+- Tratamento de falhas em chamadas HTTP externas.
+- Resiliência com retry e circuit breaker usando Resilience4j.
+- Separação de responsabilidades entre controller, service, repository, DTO, entities, security, config e exceptions.
+- Consumo de API REST no frontend com Angular HttpClient.
+- Proteção de rotas no frontend com guards.
+- Uso de interceptors para envio automático do token JWT.
+- Sincronização de dados externos para persistência local.
+- Paginação de transações financeiras.
+- Observabilidade com Spring Boot Actuator.
+- Exposição de métricas com Micrometer.
+- Documentação da API com Swagger/OpenAPI.
+- Testes automatizados com JUnit 5 e Mockito.
+- Conteinerização com Docker.
 - Organização de projeto full stack.
 - Evolução incremental de funcionalidades.
 
