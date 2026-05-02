@@ -7,11 +7,11 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 @Schema(description = "Dados de autenticação do usuário")
 public class LoginRequest {
-	@Schema(example = "jose@email.com")
+	@Schema(example = "jose@gmail.com")
 	@Email(message="email invalido")
 	@NotBlank(message = "email obrigatório")
 	private String email;
-	   @Schema(example = "123456")
+	   @Schema(example = "Joseluiz22")
 	@NotBlank(message = "senha é obrigatória")
 	@Size(min = 6, max = 128, message = "senha deve ter entre 6 e 128 caracteres")
 	@Pattern(regexp = "^(?=(?:.*[A-Za-z]){6,})(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]+$", message = "senha: mínimo 6 letras, com ao menos 1 maiúscula e 1 número (somente letras/dígitos)")

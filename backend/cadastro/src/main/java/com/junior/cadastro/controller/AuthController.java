@@ -17,12 +17,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.junior.cadastro.DTO.LoginRequest;
+import com.junior.cadastro.exceptions.ApiError;
 import com.junior.cadastro.security.JwtService;
 import com.junior.cadastro.util.HttpRequestUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,7 +57,26 @@ public class AuthController {
             examples = @ExampleObject(value = "{\"token\":\"jwt-token\"}")
         )
     )
-    @ApiResponse(responseCode = "401", description = "Credenciais inválidas", content = @Content)
+    @ApiResponse(
+        responseCode = "400",
+        description = "JSON inválido ou corpo da requisição malformado",
+        content = @Content(schema = @Schema(implementation = ApiError.class))
+    )
+    @ApiResponse(
+        responseCode = "401",
+        description = "Credenciais inválidas",
+        content = @Content(schema = @Schema(implementation = ApiError.class))
+    )
+    @ApiResponse(
+        responseCode = "422",
+        description = "Erro de validação nos campos enviados",
+        content = @Content(schema = @Schema(implementation = ApiError.class))
+    )
+    @ApiResponse(
+        responseCode = "500",
+        description = "Erro interno inesperado",
+        content = @Content(schema = @Schema(implementation = ApiError.class))
+    )
     public ResponseEntity<Object> login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
         final String ip = HttpRequestUtils.clientIp(http);
 

@@ -17,6 +17,7 @@ import com.junior.cadastro.DTO.ConnectTokenResponse;
 import com.junior.cadastro.DTO.PluggyAccountDTO;
 import com.junior.cadastro.DTO.PluggySyncRequest;
 import com.junior.cadastro.DTO.PluggyTransactionDTO;
+import com.junior.cadastro.exceptions.ApiError;
 import com.junior.cadastro.service.PluggyService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,31 +43,34 @@ public class PluggyController {
     }
 
     @PostMapping("/connect-token")
-    @Operation(summary = "Gera connect token", description = "Gera o token necessário para abrir o Pluggy Connect.")
-    @ApiResponse(
-        responseCode = "200",
-        description = "Token gerado com sucesso",
-        content = @Content(schema = @Schema(implementation = ConnectTokenResponse.class))
-    )
+    @ApiResponse(responseCode = "200", description = "Token gerado com sucesso", content = @Content(schema = @Schema(implementation = ConnectTokenResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Não autenticado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "502", description = "Erro na integração com a Pluggy", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno inesperado", content = @Content(schema = @Schema(implementation = ApiError.class)))
     public ResponseEntity<ConnectTokenResponse> createConnectToken() {
         return ResponseEntity.ok(pluggyService.createConnectToken());
     }
 
     @PostMapping("/items/sync")
-    @Operation(summary = "Sincroniza item Pluggy", description = "Importa contas e transações do item informado.")
     @ApiResponse(responseCode = "204", description = "Item sincronizado com sucesso", content = @Content)
+    @ApiResponse(responseCode = "400", description = "JSON inválido ou corpo da requisição malformado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "401", description = "Não autenticado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "422", description = "Erro de validação nos campos enviados", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "502", description = "Erro na integração com a Pluggy", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno inesperado", content = @Content(schema = @Schema(implementation = ApiError.class)))
     public ResponseEntity<Void> syncItem(@Valid @RequestBody PluggySyncRequest request) {
         pluggyService.syncItem(request.getItemId());
         return ResponseEntity.noContent().build();
     }
     
     @GetMapping("/accounts")
-    @Operation(summary = "Lista contas do usuário autenticado")
-    @ApiResponse(
-        responseCode = "200",
-        description = "Contas retornadas com sucesso",
-        content = @Content(array = @ArraySchema(schema = @Schema(implementation = PluggyAccountDTO.class)))
-    )
+    @ApiResponse(responseCode = "200", description = "Contas retornadas com sucesso", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PluggyAccountDTO.class))))
+    @ApiResponse(responseCode = "401", description = "Não autenticado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "502", description = "Erro na integração com a Pluggy", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno inesperado", content = @Content(schema = @Schema(implementation = ApiError.class)))
     public ResponseEntity<List<PluggyAccountDTO>> findMyAccounts() {
         List<PluggyAccountDTO> accounts = pluggyService.findMyAccounts();
         return ResponseEntity.ok(accounts);
@@ -74,11 +78,12 @@ public class PluggyController {
 
     @GetMapping("/accounts/{accountId}/transactions")
     @Operation(summary = "Lista transações da conta", description = "Retorna as transações paginadas da conta informada.")
-    @ApiResponse(
-        responseCode = "200",
-        description = "Transações retornadas com sucesso",
-        content = @Content(schema = @Schema(implementation = PluggyTransactionDTO.class))
-    )
+    @ApiResponse(responseCode = "200", description = "Transações retornadas com sucesso", content = @Content(schema = @Schema(implementation = PluggyTransactionDTO.class)))
+    @ApiResponse(responseCode = "400", description = "Parâmetro accountId inválido", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "401", description = "Não autenticado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "502", description = "Conta não encontrada para o usuário ou erro na integração com a Pluggy", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno inesperado", content = @Content(schema = @Schema(implementation = ApiError.class)))
     public ResponseEntity<Page<PluggyTransactionDTO>> findMyTransactionsByAccount(
         @Parameter(description = "ID interno da conta", example = "1")
         @PathVariable Long accountId,

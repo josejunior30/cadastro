@@ -2,12 +2,23 @@ package com.junior.cadastro.exceptions;
 
 import java.time.Instant;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+@Schema(description = "Resposta padrão de erro da API")
 public class ApiError {
 
+    @Schema(example = "2026-05-02T12:00:00Z")
     private Instant timestamp;
+
+    @Schema(example = "400")
     private Integer status;
+
+    @Schema(example = "Erro de validação")
     private String error;
+
+    @Schema(example = "email: email obrigatório")
     private String message;
+
+    @Schema(example = "/auth/login")
     private String path;
 
     public ApiError() {

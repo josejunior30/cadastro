@@ -13,9 +13,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.junior.cadastro.DTO.PluggyWebhookEvent;
+import com.junior.cadastro.exceptions.ApiError;
 import com.junior.cadastro.service.PluggyWebhookService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/webhooks/pluggy")
+@Tag(name = "Webhooks Pluggy", description = "Recebimento de eventos enviados pela Pluggy")
 public class PluggyWebhookController {
 
     private final PluggyWebhookService pluggyWebhookService;
@@ -28,6 +36,14 @@ public class PluggyWebhookController {
     }
 
     @PostMapping
+    @Operation(
+        summary = "Recebe webhook da Pluggy",
+        description = "Valida o segredo do webhook e processa eventos de item, conta e transações."
+    )
+    @ApiResponse(responseCode = "202", description = "Webhook aceito para processamento", content = @Content)
+    @ApiResponse(responseCode = "400", description = "JSON inválido ou corpo malformado", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "401", description = "Secret ausente ou inválido", content = @Content)
+    @ApiResponse(responseCode = "500", description = "Erro interno inesperado", content = @Content(schema = @Schema(implementation = ApiError.class)))
     public ResponseEntity<Void> receiveWebhook(
             @RequestHeader(value = "X-Webhook-Secret", required = false) String headerSecret,
             @RequestParam(value = "secret", required = false) String querySecret,

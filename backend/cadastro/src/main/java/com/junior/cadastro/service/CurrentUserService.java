@@ -1,14 +1,14 @@
 package com.junior.cadastro.service;
 
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import com.junior.cadastro.entities.User;
-import com.junior.cadastro.exceptions.PluggyIntegrationException;
+import com.junior.cadastro.exceptions.ResourceNotFoundException;
 import com.junior.cadastro.repository.UserRepository;
-
 @Service
 public class CurrentUserService {
 
@@ -21,8 +21,8 @@ public class CurrentUserService {
     public User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null) {
-            throw new PluggyIntegrationException("Nenhum usuário autenticado encontrado.");
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AuthenticationCredentialsNotFoundException("Usuário não autenticado.");
         }
 
         String email;
@@ -33,15 +33,13 @@ public class CurrentUserService {
             email = authentication.getName();
         }
 
-        if (email == null || email.isBlank()) {
-            email = authentication.getName();
+        if (email == null || email.isBlank() || "anonymousUser".equals(email)) {
+            throw new AuthenticationCredentialsNotFoundException("Usuário não autenticado.");
         }
 
-        final String resolvedEmail = email;
-
-        return userRepository.findByEmail(resolvedEmail)
-                .orElseThrow(() -> new PluggyIntegrationException(
-                        "Usuário autenticado não encontrado: " + resolvedEmail
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Usuário autenticado não encontrado: " + email
                 ));
     }
 
@@ -51,11 +49,11 @@ public class CurrentUserService {
         try {
             userId = Long.valueOf(clientUserId);
         } catch (NumberFormatException e) {
-            throw new PluggyIntegrationException("clientUserId inválido: " + clientUserId, e);
+            throw new IllegalArgumentException("clientUserId inválido: " + clientUserId, e);
         }
 
         return userRepository.findById(userId)
-                .orElseThrow(() -> new PluggyIntegrationException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Usuário não encontrado para clientUserId=" + clientUserId
                 ));
     }
